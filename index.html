@@ -2,7 +2,11 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#ffffff" />
   <title>Feedback Paziente — SW Studio</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
@@ -15,135 +19,213 @@
       --dark: #2c3e50;  --border: #dce1e7;
       --white: #fff;    --shadow: 0 2px 12px rgba(0,0,0,0.08);
       --radius: 12px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #f0f2f5; color: var(--dark);
-      min-height: 100vh; padding-bottom: 48px;
+
+      /* touch target minimo 48px */
+      --touch: 48px;
     }
 
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html { font-size: 16px; }
+
+    body {
+      font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+      background: #f0f2f5; color: var(--dark);
+      min-height: 100vh; min-height: 100dvh;
+      padding-bottom: calc(40px + env(safe-area-inset-bottom));
+    }
+
+    /* ── HEADER ── */
     header {
       background: var(--white);
       border-bottom: 1px solid var(--border);
-      padding: 18px 24px; text-align: center;
+      padding: 16px 20px;
+      padding-top: calc(16px + env(safe-area-inset-top));
+      text-align: center;
       box-shadow: var(--shadow);
+      position: sticky; top: 0; z-index: 10;
     }
-    header h1 { font-size: 1.25rem; font-weight: 700; }
-    header p  { font-size: 0.86rem; color: var(--gray); margin-top: 4px; }
+    header h1 { font-size: clamp(1rem, 4vw, 1.3rem); font-weight: 700; }
+    header p  { font-size: clamp(0.78rem, 3vw, 0.88rem); color: var(--gray); margin-top: 3px; }
 
-    .container { max-width: 680px; margin: 0 auto; padding: 28px 16px; }
+    /* ── CONTAINER ── */
+    .container { max-width: 680px; margin: 0 auto; padding: clamp(16px, 4vw, 28px) clamp(12px, 4vw, 16px); }
 
-    /* ── SKELETON loader ── */
+    /* ── SKELETON ── */
     .skeleton {
       background: linear-gradient(90deg, #e8eaed 25%, #f4f6f7 50%, #e8eaed 75%);
       background-size: 200% 100%;
       animation: shimmer 1.2s infinite;
-      border-radius: 20px; height: 34px; display: inline-block;
+      border-radius: 20px; height: 44px; display: inline-block;
     }
     @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
     .skeleton-row { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 14px; }
-    .skeleton-tag { width: 120px; }
-    .skeleton-tag-sm { width: 90px; }
-    .skeleton-tag-lg { width: 160px; }
+    .skeleton-tag    { width: clamp(90px, 30vw, 130px); }
+    .skeleton-tag-sm { width: clamp(70px, 22vw, 95px); }
+    .skeleton-tag-lg { width: clamp(120px, 40vw, 170px); }
 
+    /* ── CARD ── */
     .card {
       background: var(--white); border-radius: var(--radius);
-      box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      padding: clamp(16px, 4vw, 24px);
+      margin-bottom: clamp(14px, 3vw, 20px);
     }
     .card-title {
-      font-size: 1rem; font-weight: 700; margin-bottom: 18px;
-      display: flex; align-items: center; gap: 8px;
+      font-size: clamp(0.92rem, 3.5vw, 1rem);
+      font-weight: 700; margin-bottom: clamp(14px, 3vw, 18px);
+      display: flex; align-items: center; gap: 8px; line-height: 1.3;
     }
     .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
     .dot-green { background: var(--green); }
     .dot-red   { background: var(--red); }
 
     /* ── TAGS ── */
-    .tags-grid { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 14px; min-height: 34px; }
+    .tags-grid {
+      display: flex; flex-wrap: wrap;
+      gap: clamp(7px, 2vw, 10px);
+      margin-bottom: clamp(12px, 3vw, 14px);
+      min-height: var(--touch);
+    }
     .tag-label {
       display: flex; align-items: center; gap: 6px;
-      padding: 8px 14px; border-radius: 20px;
+      padding: clamp(10px, 2.5vw, 11px) clamp(12px, 3vw, 16px);
+      border-radius: 24px;
       border: 1.5px solid var(--border); cursor: pointer;
-      font-size: 0.86rem; font-weight: 500;
-      transition: all 0.18s; user-select: none;
-      background: var(--white); -webkit-tap-highlight-color: transparent;
+      font-size: clamp(0.82rem, 3.2vw, 0.9rem);
+      font-weight: 500; transition: all 0.18s;
+      user-select: none; background: var(--white);
+      min-height: var(--touch);
+      /* Nessun outline blu su iOS */
+      -webkit-user-select: none;
+      touch-action: manipulation;
     }
     .tag-label input { display: none; }
 
+    /* Active state per touch */
+    .strength-section .tag-label:active { background: var(--green-light); }
     .strength-section .tag-label:hover  { border-color: var(--green); color: var(--green-dark); }
-    .strength-section .tag-label.checked { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+    .strength-section .tag-label.checked {
+      background: var(--green-light); border-color: var(--green); color: var(--green-dark);
+    }
+    .weakness-section .tag-label:active { background: var(--red-light); }
     .weakness-section .tag-label:hover  { border-color: var(--red); color: var(--red-dark); }
-    .weakness-section .tag-label.checked { background: var(--red-light); border-color: var(--red); color: var(--red-dark); }
+    .weakness-section .tag-label.checked {
+      background: var(--red-light); border-color: var(--red); color: var(--red-dark);
+    }
 
     /* ── CUSTOM INPUT ── */
-    .free-input-row { display: flex; gap: 8px; margin-top: 4px; }
+    .free-input-row {
+      display: flex; gap: 8px; margin-top: 4px;
+      flex-wrap: wrap;
+    }
     .free-input {
-      flex: 1; padding: 10px 14px;
-      border: 1.5px solid var(--border); border-radius: 8px;
-      font-size: 0.9rem; outline: none; transition: border-color 0.2s;
+      flex: 1; min-width: 0;
+      padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 14px);
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: clamp(0.88rem, 3.5vw, 0.95rem);
+      outline: none; transition: border-color 0.2s;
+      min-height: var(--touch);
+      /* Evita zoom su iOS (font-size >= 16px evita zoom automatico) */
+      font-size: max(16px, 0.9rem);
     }
     .strength-section .free-input:focus { border-color: var(--green); }
     .weakness-section .free-input:focus { border-color: var(--red); }
-    .btn-add {
-      padding: 10px 16px; border: none; border-radius: 8px;
-      font-size: 0.86rem; font-weight: 700; cursor: pointer; color: white;
-      transition: opacity 0.2s; white-space: nowrap;
-    }
-    .btn-add:active { opacity: 0.8; }
-    .strength-section .btn-add { background: var(--green); }
-    .weakness-section .btn-add { background: var(--red); }
 
-    /* ── NOTE + SUBMIT ── */
+    .btn-add {
+      padding: 0 clamp(14px, 4vw, 18px);
+      border: none; border-radius: 10px;
+      font-size: clamp(0.82rem, 3vw, 0.88rem);
+      font-weight: 700; cursor: pointer; color: white;
+      white-space: nowrap;
+      min-height: var(--touch);
+      min-width: var(--touch);
+      touch-action: manipulation;
+    }
+    .strength-section .btn-add { background: var(--green); }
+    .strength-section .btn-add:active { background: #27ae60; }
+    .weakness-section .btn-add { background: var(--red); }
+    .weakness-section .btn-add:active { background: #c0392b; }
+
+    /* ── NOTE ── */
     textarea.note-field {
-      width: 100%; padding: 12px 14px;
-      border: 1.5px solid var(--border); border-radius: 8px;
-      font-size: 0.9rem; resize: vertical; min-height: 80px;
-      outline: none; font-family: inherit; transition: border-color 0.2s;
+      width: 100%;
+      padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 14px);
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: max(16px, 0.9rem); /* evita zoom su iOS */
+      resize: vertical; min-height: 90px;
+      outline: none; font-family: inherit;
+      transition: border-color 0.2s; line-height: 1.5;
     }
     textarea.note-field:focus { border-color: var(--blue); }
 
+    /* ── SUBMIT BAR ── */
     .submit-bar {
       display: flex; align-items: center;
-      justify-content: space-between; margin-top: 16px;
+      justify-content: space-between;
+      gap: 12px; margin-top: 16px;
+      flex-wrap: wrap;
     }
-    .counter { font-size: 0.84rem; color: var(--gray); }
-
+    .counter {
+      font-size: clamp(0.8rem, 3vw, 0.84rem);
+      color: var(--gray); flex: 1; min-width: 120px;
+    }
     .btn-submit {
-      padding: 14px 36px; background: var(--blue); color: white;
-      border: none; border-radius: 10px;
-      font-size: 1rem; font-weight: 700; cursor: pointer;
-      transition: background 0.2s, transform 0.1s; min-width: 180px;
+      flex: 1; min-width: 160px;
+      padding: clamp(14px, 3.5vw, 16px) 24px;
+      background: var(--blue); color: white;
+      border: none; border-radius: 12px;
+      font-size: clamp(0.95rem, 3.5vw, 1rem);
+      font-weight: 700; cursor: pointer;
+      transition: background 0.2s;
+      min-height: var(--touch);
+      touch-action: manipulation;
     }
-    .btn-submit:hover    { background: #216ea0; }
-    .btn-submit:active   { transform: scale(0.98); }
+    .btn-submit:active   { background: #216ea0; }
     .btn-submit:disabled { background: var(--gray); cursor: not-allowed; }
 
     /* ── TOAST ── */
     .toast {
-      position: fixed; bottom: 24px; left: 50%;
+      position: fixed;
+      bottom: calc(24px + env(safe-area-inset-bottom));
+      left: 50%;
       transform: translateX(-50%) translateY(20px);
       background: var(--dark); color: white;
-      padding: 14px 28px; border-radius: 30px;
-      font-size: 0.93rem; font-weight: 500;
+      padding: 14px clamp(20px, 5vw, 28px); border-radius: 30px;
+      font-size: clamp(0.88rem, 3.5vw, 0.93rem); font-weight: 500;
       box-shadow: 0 4px 20px rgba(0,0,0,0.22);
       opacity: 0; transition: all 0.3s;
-      pointer-events: none; z-index: 9999; white-space: nowrap;
+      pointer-events: none; z-index: 9999;
+      white-space: nowrap;
+      max-width: calc(100vw - 32px);
+      text-align: center;
     }
     .toast.show    { opacity: 1; transform: translateX(-50%) translateY(0); }
     .toast.success { background: var(--green); }
     .toast.error   { background: var(--red); }
 
+    /* ── ADMIN LINK ── */
     .admin-link {
       text-align: center; margin-top: 12px;
-      font-size: 0.8rem; color: var(--gray);
+      font-size: clamp(0.76rem, 3vw, 0.82rem); color: var(--gray);
+      padding-bottom: 8px;
     }
-    .admin-link a { color: var(--gray); }
+    .admin-link a { color: var(--gray); padding: 8px; display: inline-block; }
 
+    /* ── BREAKPOINTS ── */
+
+    /* Telefoni piccoli */
+    @media (max-width: 380px) {
+      .free-input-row { flex-direction: column; }
+      .btn-add { width: 100%; }
+      .submit-bar { flex-direction: column; align-items: stretch; }
+      .counter { text-align: center; }
+    }
+
+    /* Telefoni medi */
     @media (max-width: 480px) {
-      .card { padding: 18px 16px; }
-      .btn-submit { width: 100%; }
-      .submit-bar { flex-direction: column; gap: 12px; align-items: stretch; }
+      .submit-bar { flex-direction: column; align-items: stretch; }
+      .counter { text-align: center; }
     }
   </style>
 </head>
@@ -163,7 +245,6 @@
       Cosa piace al paziente — Punti di Forza
     </div>
     <div class="tags-grid" id="strength-tags">
-      <!-- skeleton -->
       <span class="skeleton skeleton-tag"></span>
       <span class="skeleton skeleton-tag-lg"></span>
       <span class="skeleton skeleton-tag-sm"></span>
@@ -173,7 +254,7 @@
     </div>
     <div class="free-input-row">
       <input type="text" class="free-input" id="strength-input"
-             placeholder="Altro (scrivi e premi Invio)…"
+             placeholder="Altro…"
              onkeydown="if(event.key==='Enter'){event.preventDefault();addCustom('strength')}" />
       <button class="btn-add" onclick="addCustom('strength')">+ Aggiungi</button>
     </div>
@@ -186,7 +267,6 @@
       Cosa non piace al paziente — Punti di Debolezza
     </div>
     <div class="tags-grid" id="weakness-tags">
-      <!-- skeleton -->
       <span class="skeleton skeleton-tag-lg"></span>
       <span class="skeleton skeleton-tag"></span>
       <span class="skeleton skeleton-tag-sm"></span>
@@ -196,7 +276,7 @@
     </div>
     <div class="free-input-row">
       <input type="text" class="free-input" id="weakness-input"
-             placeholder="Altro (scrivi e premi Invio)…"
+             placeholder="Altro…"
              onkeydown="if(event.key==='Enter'){event.preventDefault();addCustom('weakness')}" />
       <button class="btn-add" onclick="addCustom('weakness')">+ Aggiungi</button>
     </div>
@@ -230,15 +310,11 @@ const selected = { strength: new Set(), weakness: new Set() };
 const custom   = { strength: [], weakness: [] };
 let   presets  = { strength: [], weakness: [] };
 
-// ─── LOAD CATEGORIES FROM SUPABASE ───────────────────────────
 async function loadCategories() {
   const { data, error } = await db
-    .from('categories')
-    .select('type, label')
-    .order('sort_order', { ascending: true });
+    .from('categories').select('type, label').order('sort_order', { ascending: true });
 
   if (error || !data || data.length === 0) {
-    // fallback alle categorie hardcoded se il DB non è ancora configurato
     presets.strength = [
       'Personale gentile e disponibile','Tempi di attesa brevi',
       'Studio pulito e igienico','Spiegazioni chiare e dettagliate',
@@ -259,12 +335,10 @@ async function loadCategories() {
     presets.strength = data.filter(r => r.type === 'strength').map(r => r.label);
     presets.weakness = data.filter(r => r.type === 'weakness').map(r => r.label);
   }
-
   renderGroup('strength');
   renderGroup('weakness');
 }
 
-// ─── RENDER TAGS ─────────────────────────────────────────────
 function renderGroup(type) {
   const container = document.getElementById(type + '-tags');
   const all = [...presets[type], ...custom[type]];
@@ -291,7 +365,7 @@ function updateCounter() {
   const n = selected.strength.size + selected.weakness.size;
   document.getElementById('counter').textContent =
     n === 0 ? 'Nessun elemento selezionato'
-            : `${n} element${n === 1 ? 'o' : 'i'} selezionat${n === 1 ? 'o' : 'i'}`;
+            : `${n} element${n===1?'o':'i'} selezionat${n===1?'o':'i'}`;
 }
 
 function addCustom(type) {
@@ -306,15 +380,12 @@ function addCustom(type) {
   updateCounter();
 }
 
-// ─── SUBMIT ──────────────────────────────────────────────────
 async function submitForm() {
   if (selected.strength.size === 0 && selected.weakness.size === 0) {
     showToast('Seleziona almeno un elemento.', 'error'); return;
   }
-
   const btn = document.getElementById('btn-submit');
-  btn.disabled = true;
-  btn.textContent = 'Salvataggio…';
+  btn.disabled = true; btn.textContent = 'Salvataggio…';
 
   const { error } = await db.from('entries').insert({
     strengths:  [...selected.strength],
@@ -322,31 +393,21 @@ async function submitForm() {
     note: document.getElementById('note-field').value.trim(),
   });
 
-  btn.disabled = false;
-  btn.textContent = 'Salva Segnalazione';
+  btn.disabled = false; btn.textContent = 'Salva Segnalazione';
 
-  if (error) {
-    console.error(error);
-    showToast('Errore nel salvataggio. Riprova.', 'error');
-    return;
-  }
+  if (error) { showToast('Errore nel salvataggio. Riprova.', 'error'); return; }
 
-  selected.strength.clear();
-  selected.weakness.clear();
-  custom.strength = [];
-  custom.weakness = [];
+  selected.strength.clear(); selected.weakness.clear();
+  custom.strength = []; custom.weakness = [];
   document.getElementById('note-field').value = '';
-  renderGroup('strength');
-  renderGroup('weakness');
-  updateCounter();
+  renderGroup('strength'); renderGroup('weakness'); updateCounter();
   showToast('Segnalazione salvata!', 'success');
 }
 
-// ─── UTILS ───────────────────────────────────────────────────
 function showToast(msg, type = '') {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = 'toast show' + (type ? ' ' + type : '');
+  t.className = 'toast show' + (type ? ' '+type : '');
   clearTimeout(t._t);
   t._t = setTimeout(() => t.classList.remove('show'), 2800);
 }
@@ -354,7 +415,6 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ─── INIT ─────────────────────────────────────────────────────
 loadCategories();
 </script>
 </body>
