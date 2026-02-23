@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feedback Paziente — SW Studio</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <style>
+    :root {
+      --green: #2ecc71; --green-light: #eafaf1; --green-dark: #1a8a4a;
+      --red: #e74c3c;   --red-light: #fdf2f0;   --red-dark: #b03a2e;
+      --blue: #2980b9;  --blue-light: #ebf5fb;
+      --gray: #7f8c8d;  --gray-light: #f4f6f7;
+      --dark: #2c3e50;  --border: #dce1e7;
+      --white: #fff;    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f0f2f5; color: var(--dark);
+      min-height: 100vh; padding-bottom: 48px;
+    }
+
+    header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 24px; text-align: center;
+      box-shadow: var(--shadow);
+    }
+    header h1 { font-size: 1.25rem; font-weight: 700; }
+    header p  { font-size: 0.86rem; color: var(--gray); margin-top: 4px; }
+
+    .container { max-width: 680px; margin: 0 auto; padding: 28px 16px; }
+
+    /* ── SKELETON loader ── */
+    .skeleton {
+      background: linear-gradient(90deg, #e8eaed 25%, #f4f6f7 50%, #e8eaed 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      border-radius: 20px; height: 34px; display: inline-block;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .skeleton-row { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 14px; }
+    .skeleton-tag { width: 120px; }
+    .skeleton-tag-sm { width: 90px; }
+    .skeleton-tag-lg { width: 160px; }
+
+    .card {
+      background: var(--white); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 24px; margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 1rem; font-weight: 700; margin-bottom: 18px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .dot-green { background: var(--green); }
+    .dot-red   { background: var(--red); }
+
+    /* ── TAGS ── */
+    .tags-grid { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 14px; min-height: 34px; }
+    .tag-label {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 20px;
+      border: 1.5px solid var(--border); cursor: pointer;
+      font-size: 0.86rem; font-weight: 500;
+      transition: all 0.18s; user-select: none;
+      background: var(--white); -webkit-tap-highlight-color: transparent;
+    }
+    .tag-label input { display: none; }
+
+    .strength-section .tag-label:hover  { border-color: var(--green); color: var(--green-dark); }
+    .strength-section .tag-label.checked { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+    .weakness-section .tag-label:hover  { border-color: var(--red); color: var(--red-dark); }
+    .weakness-section .tag-label.checked { background: var(--red-light); border-color: var(--red); color: var(--red-dark); }
+
+    /* ── CUSTOM INPUT ── */
+    .free-input-row { display: flex; gap: 8px; margin-top: 4px; }
+    .free-input {
+      flex: 1; padding: 10px 14px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 0.9rem; outline: none; transition: border-color 0.2s;
+    }
+    .strength-section .free-input:focus { border-color: var(--green); }
+    .weakness-section .free-input:focus { border-color: var(--red); }
+    .btn-add {
+      padding: 10px 16px; border: none; border-radius: 8px;
+      font-size: 0.86rem; font-weight: 700; cursor: pointer; color: white;
+      transition: opacity 0.2s; white-space: nowrap;
+    }
+    .btn-add:active { opacity: 0.8; }
+    .strength-section .btn-add { background: var(--green); }
+    .weakness-section .btn-add { background: var(--red); }
+
+    /* ── NOTE + SUBMIT ── */
+    textarea.note-field {
+      width: 100%; padding: 12px 14px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 0.9rem; resize: vertical; min-height: 80px;
+      outline: none; font-family: inherit; transition: border-color 0.2s;
+    }
+    textarea.note-field:focus { border-color: var(--blue); }
+
+    .submit-bar {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-top: 16px;
+    }
+    .counter { font-size: 0.84rem; color: var(--gray); }
+
+    .btn-submit {
+      padding: 14px 36px; background: var(--blue); color: white;
+      border: none; border-radius: 10px;
+      font-size: 1rem; font-weight: 700; cursor: pointer;
+      transition: background 0.2s, transform 0.1s; min-width: 180px;
+    }
+    .btn-submit:hover    { background: #216ea0; }
+    .btn-submit:active   { transform: scale(0.98); }
+    .btn-submit:disabled { background: var(--gray); cursor: not-allowed; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--dark); color: white;
+      padding: 14px 28px; border-radius: 30px;
+      font-size: 0.93rem; font-weight: 500;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.22);
+      opacity: 0; transition: all 0.3s;
+      pointer-events: none; z-index: 9999; white-space: nowrap;
+    }
+    .toast.show    { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { background: var(--green); }
+    .toast.error   { background: var(--red); }
+
+    .admin-link {
+      text-align: center; margin-top: 12px;
+      font-size: 0.8rem; color: var(--gray);
+    }
+    .admin-link a { color: var(--gray); }
+
+    @media (max-width: 480px) {
+      .card { padding: 18px 16px; }
+      .btn-submit { width: 100%; }
+      .submit-bar { flex-direction: column; gap: 12px; align-items: stretch; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>SW Studio — Feedback Paziente</h1>
+  <p>Registra cosa ha detto il paziente sulla sua esperienza</p>
+</header>
+
+<div class="container">
+
+  <!-- FORZA -->
+  <div class="card strength-section">
+    <div class="card-title">
+      <span class="dot dot-green"></span>
+      Cosa piace al paziente — Punti di Forza
+    </div>
+    <div class="tags-grid" id="strength-tags">
+      <!-- skeleton -->
+      <span class="skeleton skeleton-tag"></span>
+      <span class="skeleton skeleton-tag-lg"></span>
+      <span class="skeleton skeleton-tag-sm"></span>
+      <span class="skeleton skeleton-tag"></span>
+      <span class="skeleton skeleton-tag-lg"></span>
+      <span class="skeleton skeleton-tag-sm"></span>
+    </div>
+    <div class="free-input-row">
+      <input type="text" class="free-input" id="strength-input"
+             placeholder="Altro (scrivi e premi Invio)…"
+             onkeydown="if(event.key==='Enter'){event.preventDefault();addCustom('strength')}" />
+      <button class="btn-add" onclick="addCustom('strength')">+ Aggiungi</button>
+    </div>
+  </div>
+
+  <!-- DEBOLEZZA -->
+  <div class="card weakness-section">
+    <div class="card-title">
+      <span class="dot dot-red"></span>
+      Cosa non piace al paziente — Punti di Debolezza
+    </div>
+    <div class="tags-grid" id="weakness-tags">
+      <!-- skeleton -->
+      <span class="skeleton skeleton-tag-lg"></span>
+      <span class="skeleton skeleton-tag"></span>
+      <span class="skeleton skeleton-tag-sm"></span>
+      <span class="skeleton skeleton-tag"></span>
+      <span class="skeleton skeleton-tag-lg"></span>
+      <span class="skeleton skeleton-tag-sm"></span>
+    </div>
+    <div class="free-input-row">
+      <input type="text" class="free-input" id="weakness-input"
+             placeholder="Altro (scrivi e premi Invio)…"
+             onkeydown="if(event.key==='Enter'){event.preventDefault();addCustom('weakness')}" />
+      <button class="btn-add" onclick="addCustom('weakness')">+ Aggiungi</button>
+    </div>
+  </div>
+
+  <!-- NOTE -->
+  <div class="card">
+    <div class="card-title">📝 Note aggiuntive</div>
+    <textarea class="note-field" id="note-field"
+              placeholder="Note libere, contesto, osservazioni dell'operatore…"></textarea>
+    <div class="submit-bar">
+      <div class="counter" id="counter">Nessun elemento selezionato</div>
+      <button class="btn-submit" id="btn-submit" onclick="submitForm()">
+        Salva Segnalazione
+      </button>
+    </div>
+  </div>
+
+  <div class="admin-link">
+    <a href="login.html">Accesso amministratore →</a>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const selected = { strength: new Set(), weakness: new Set() };
+const custom   = { strength: [], weakness: [] };
+let   presets  = { strength: [], weakness: [] };
+
+// ─── LOAD CATEGORIES FROM SUPABASE ───────────────────────────
+async function loadCategories() {
+  const { data, error } = await db
+    .from('categories')
+    .select('type, label')
+    .order('sort_order', { ascending: true });
+
+  if (error || !data || data.length === 0) {
+    // fallback alle categorie hardcoded se il DB non è ancora configurato
+    presets.strength = [
+      'Personale gentile e disponibile','Tempi di attesa brevi',
+      'Studio pulito e igienico','Spiegazioni chiare e dettagliate',
+      'Prezzi accessibili','Orari flessibili','Ambiente accogliente',
+      'Professionalità elevata','Tecnologia moderna',
+      'Facile accessibilità / parcheggio','Puntualità negli appuntamenti',
+      'Attenzione al paziente',
+    ];
+    presets.weakness = [
+      'Tempi di attesa lunghi','Prezzi elevati',
+      'Difficoltà nel prenotare appuntamenti','Parcheggio difficile',
+      'Spiegazioni poco chiare','Orari limitati','Personale poco disponibile',
+      "Sala d'attesa scomoda",'Difficoltà nel raggiungere lo studio',
+      'Comunicazione carente','Poca flessibilità sugli appuntamenti',
+      "Attesa lunga tra un appuntamento e l'altro",
+    ];
+  } else {
+    presets.strength = data.filter(r => r.type === 'strength').map(r => r.label);
+    presets.weakness = data.filter(r => r.type === 'weakness').map(r => r.label);
+  }
+
+  renderGroup('strength');
+  renderGroup('weakness');
+}
+
+// ─── RENDER TAGS ─────────────────────────────────────────────
+function renderGroup(type) {
+  const container = document.getElementById(type + '-tags');
+  const all = [...presets[type], ...custom[type]];
+  container.innerHTML = '';
+  if (all.length === 0) {
+    container.innerHTML = '<span style="color:var(--gray);font-size:0.85rem;">Nessuna categoria disponibile</span>';
+    return;
+  }
+  all.forEach(item => {
+    const lbl = document.createElement('label');
+    lbl.className = 'tag-label' + (selected[type].has(item) ? ' checked' : '');
+    lbl.innerHTML = `<input type="checkbox" ${selected[type].has(item) ? 'checked' : ''}/>${esc(item)}`;
+    lbl.querySelector('input').addEventListener('change', e => {
+      if (e.target.checked) selected[type].add(item);
+      else selected[type].delete(item);
+      lbl.classList.toggle('checked', e.target.checked);
+      updateCounter();
+    });
+    container.appendChild(lbl);
+  });
+}
+
+function updateCounter() {
+  const n = selected.strength.size + selected.weakness.size;
+  document.getElementById('counter').textContent =
+    n === 0 ? 'Nessun elemento selezionato'
+            : `${n} element${n === 1 ? 'o' : 'i'} selezionat${n === 1 ? 'o' : 'i'}`;
+}
+
+function addCustom(type) {
+  const inp = document.getElementById(type + '-input');
+  const val = inp.value.trim();
+  if (!val) return;
+  inp.value = '';
+  const all = [...presets[type], ...custom[type]];
+  if (!all.includes(val)) custom[type].push(val);
+  selected[type].add(val);
+  renderGroup(type);
+  updateCounter();
+}
+
+// ─── SUBMIT ──────────────────────────────────────────────────
+async function submitForm() {
+  if (selected.strength.size === 0 && selected.weakness.size === 0) {
+    showToast('Seleziona almeno un elemento.', 'error'); return;
+  }
+
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  btn.textContent = 'Salvataggio…';
+
+  const { error } = await db.from('entries').insert({
+    strengths:  [...selected.strength],
+    weaknesses: [...selected.weakness],
+    note: document.getElementById('note-field').value.trim(),
+  });
+
+  btn.disabled = false;
+  btn.textContent = 'Salva Segnalazione';
+
+  if (error) {
+    console.error(error);
+    showToast('Errore nel salvataggio. Riprova.', 'error');
+    return;
+  }
+
+  selected.strength.clear();
+  selected.weakness.clear();
+  custom.strength = [];
+  custom.weakness = [];
+  document.getElementById('note-field').value = '';
+  renderGroup('strength');
+  renderGroup('weakness');
+  updateCounter();
+  showToast('Segnalazione salvata!', 'success');
+}
+
+// ─── UTILS ───────────────────────────────────────────────────
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 2800);
+}
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────
+loadCategories();
+</script>
+</body>
+</html>

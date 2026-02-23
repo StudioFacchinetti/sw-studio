@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git --version:*)",
+      "Bash(gh:*)",
+      "Bash(git -C /c/Users/studi/Downloads/SWOT init)",
+      "Bash(git -C /c/Users/studi/Downloads/SWOT add .)",
+      "Bash(git -C /c/Users/studi/Downloads/SWOT commit -m \"Initial commit — SW Studio feedback app\")",
+      "Bash(git config:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
